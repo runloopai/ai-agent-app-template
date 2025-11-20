@@ -84,17 +84,28 @@ export function useLangGraphThread(
   };
 
   const state: ThreadState = useMemo(
-    () => ({
-      threadId: localThreadId,
-      messages: stream.messages ?? [],
-      isStreaming: stream.isLoading,
-      error:
-        stream.error instanceof Error
-          ? stream.error.message
-          : typeof stream.error === "string"
-            ? stream.error
-            : undefined,
-    }),
+    () => {
+      let errorMessage: string | undefined;
+      if (stream.error instanceof Error) {
+        errorMessage = stream.error.message;
+      } else if (typeof stream.error === "string") {
+        errorMessage = stream.error;
+      }
+
+      // TEMPORARY: Filter out pickle/thread.lock errors
+      // Remove or comment out this block to show all errors again
+      if (errorMessage && errorMessage.includes("cannot pickle '_thread.lock' object")) {
+        errorMessage = undefined; // Suppress this specific error
+      }
+      // END TEMPORARY FILTER
+
+      return {
+        threadId: localThreadId,
+        messages: stream.messages ?? [],
+        isStreaming: stream.isLoading,
+        error: errorMessage,
+      };
+    },
     [localThreadId, stream.error, stream.isLoading, stream.messages],
   );
 
