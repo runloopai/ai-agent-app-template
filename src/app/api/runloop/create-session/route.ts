@@ -99,6 +99,7 @@ export async function POST(req: Request) {
       },
       launch_parameters: {
         available_ports: [port],
+        resource_size_request: "MEDIUM"
       },
       metadata: {
         from: "runloopAgentTemplate"
