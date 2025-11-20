@@ -112,7 +112,7 @@ export async function POST(req: Request) {
         resource_size_request: "MEDIUM",
         user_parameters: {
           uid: 0,
-          username: "user",
+          username: "root",
         }
       },
       metadata: {
