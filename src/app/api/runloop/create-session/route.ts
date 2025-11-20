@@ -85,7 +85,7 @@ export async function POST(req: Request) {
         },
       ],
       snapshot_id: process.env.RUNLOOP_DEFAULT_SNAPSHOT_ID || undefined,
-      mounts: process.env.RUNLOOP_DEFAULT_SNAPSHOT_ID ? [
+      mounts: !process.env.RUNLOOP_DEFAULT_SNAPSHOT_ID ? [
         {
           type: "agent_mount",
           agent_id: agentId,
