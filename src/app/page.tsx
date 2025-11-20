@@ -6,7 +6,7 @@ import { parseGithubUrl } from "@/lib/github-parser";
 
 export default function LandingPage() {
   const router = useRouter();
-  const [repoUrl, setRepoUrl] = useState("");
+  const [repoUrl, setRepoUrl] = useState("https://github.com/psf/requests");
   const [githubToken, setGithubToken] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);

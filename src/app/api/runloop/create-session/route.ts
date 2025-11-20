@@ -39,7 +39,7 @@ export async function POST(req: Request) {
   const port = Number(process.env.RUNLOOP_DEFAULT_PORT || 2024);
   const agentId = process.env.RUNLOOP_DEFAULT_AGENT_ID;
   const defaultGithubToken = process.env.GITHUB_TOKEN;
-  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const openaiKey = process.env.OPENAI_API_KEY;
   const tavilyKey = process.env.TAVILY_API_KEY;
   const defaultSnapshotId = process.env.RUNLOOP_DEFAULT_SNAPSHOT_ID;
   const runCommand =
@@ -53,9 +53,9 @@ export async function POST(req: Request) {
     );
   }
 
-  if (!anthropicKey) {
+  if (!openaiKey) {
     return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY is not set" },
+      { error: "OPENAI_API_KEY is not set" },
       { status: 500 },
     );
   }
@@ -103,17 +103,13 @@ export async function POST(req: Request) {
         },
       ] : null,
       environment_variables:{
-        ANTHROPIC_API_KEY: anthropicKey,
+        OPENAI_API_KEY: openaiKey,
         TAVILY_API_KEY: tavilyKey,
         ...(githubSecret ? { GH_TOKEN: githubSecret } : {}),
       },
       launch_parameters: {
         available_ports: [port],
         resource_size_request: "MEDIUM",
-        user_parameters: {
-          uid: 0,
-          username: "root",
-        }
       },
       metadata: {
         from: "runloopAgentTemplate"
