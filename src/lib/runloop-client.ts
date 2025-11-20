@@ -1,6 +1,6 @@
-import { RunloopClient } from "@runloop/api-client";
+import {Runloop, type RunloopAPI} from "@runloop/api-client";
 
-let client: RunloopClient | null = null;
+let client: RunloopAPI | null = null;
 
 export function getRunloopClient() {
   if (client) {
@@ -11,6 +11,6 @@ export function getRunloopClient() {
     throw new Error("RUNLOOP_API_KEY is not set");
   }
 
-  client = new RunloopClient({ apiKey: process.env.RUNLOOP_API_KEY });
+  client = new Runloop({ bearerToken: process.env.RUNLOOP_API_KEY });
   return client;
 }

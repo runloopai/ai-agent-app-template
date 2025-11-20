@@ -12,9 +12,6 @@ import type {
   Session,
 } from "@/types/session";
 
-type DevboxLike = { id?: string; devbox_id?: string };
-type TunnelLike = { url?: string; tunnel_url?: string };
-
 export async function POST(req: Request) {
   const body = (await req.json()) as CreateSessionRequest;
   const { sessionId, repoUrl, githubToken } = body;
@@ -92,6 +89,7 @@ export async function POST(req: Request) {
         {
           type: "agent_mount",
           agent_id: agentId,
+          agent_name: null,
           agent_path: "/home/user/agent",
         },
       ],
@@ -104,12 +102,7 @@ export async function POST(req: Request) {
       },
     });
 
-    const devboxId =
-      (devbox as DevboxLike).id || (devbox as DevboxLike).devbox_id;
-
-    if (!devboxId) {
-      throw new Error("Devbox ID missing from Runloop response");
-    }
+    const devboxId = devbox.id;
 
     await client.devboxes.executeAsync(devboxId, {
       command: runCommand,
@@ -119,12 +112,11 @@ export async function POST(req: Request) {
       port,
     });
 
-    const tunnelUrl =
-      (tunnel as TunnelLike).url || (tunnel as TunnelLike).tunnel_url;
+    const tunnelUrl = tunnel.url;
 
     const session: Session = {
       ...baseSession,
-      devboxId,
+        devboxId,
       tunnelUrl,
       status: "running",
       lastActivity: new Date().toISOString(),

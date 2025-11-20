@@ -1,7 +1,7 @@
 import type { ParsedRepo } from "@/types/runloop";
 
 const GITHUB_PATTERN =
-  /^(?:https?:\/\/)?(?:www\.)?github\.com\/(?<owner>[^/]+)\/(?<repo>[^/]+?)(?:\.git)?(?:\/.*)?$/i;
+  /^(?:https?:\/\/)?(?:www\.)?github\.com\/([^/]+)\/([^/]+?)(?:\.git)?(?:\/.*)?$/i;
 
 export function parseGithubUrl(repoUrl: string): ParsedRepo | null {
   if (!repoUrl) return null;
@@ -16,12 +16,12 @@ export function parseGithubUrl(repoUrl: string): ParsedRepo | null {
   }
 
   const match = trimmed.match(GITHUB_PATTERN);
-  if (!match || !match.groups) {
+  if (!match) {
     return null;
   }
 
   return {
-    repoOwner: match.groups.owner,
-    repoName: match.groups.repo.replace(/\.git$/, ""),
+    repoOwner: match[1],
+    repoName: match[2].replace(/\.git$/, ""),
   };
 }
