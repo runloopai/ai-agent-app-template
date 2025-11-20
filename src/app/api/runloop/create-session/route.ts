@@ -84,14 +84,15 @@ export async function POST(req: Request) {
           token: githubSecret || undefined,
         },
       ],
-      mounts: [
+      snapshot_id: process.env.RUNLOOP_SNAPSHOT_ID || undefined,
+      mounts: process.env.RUNLOOP_SNAPSHOT_ID ? [
         {
           type: "agent_mount",
           agent_id: agentId,
           agent_name: null,
           agent_path: "/home/user/agent",
         },
-      ],
+      ] : null,
       environment_variables:{
         ANTHROPIC_API_KEY: anthropicKey,
         ...(githubSecret ? { GH_TOKEN: githubSecret } : {}),

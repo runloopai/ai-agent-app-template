@@ -30,7 +30,7 @@ export function MessageInput({
   return (
     <div className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
       <textarea
-        className="w-full resize-none rounded-md border border-neutral-200 bg-neutral-50 p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full resize-none rounded-md border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-900 outline-none focus:ring-2 focus:ring-blue-500"
         rows={3}
         placeholder={placeholder || "Ask the agent something..."}
         value={value}

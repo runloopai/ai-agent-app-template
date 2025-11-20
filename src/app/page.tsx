@@ -119,7 +119,7 @@ export default function LandingPage() {
               placeholder="https://github.com/org/repo"
               value={repoUrl}
               onChange={(e) => setRepoUrl(e.target.value)}
-              className="mt-2 w-full rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-2 w-full rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="mt-2 text-sm text-neutral-500">
               We will parse the owner/name and mount it into your devbox.
@@ -135,7 +135,7 @@ export default function LandingPage() {
               placeholder="Token for private repos"
               value={githubToken}
               onChange={(e) => setGithubToken(e.target.value)}
-              className="mt-2 w-full rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-2 w-full rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="mt-2 text-xs text-neutral-500">
               Only used to clone the repository inside the devbox.
