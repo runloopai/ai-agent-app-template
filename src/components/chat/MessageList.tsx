@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ThreadMessage } from "@/types/thread";
 
 interface MessageListProps {
@@ -42,10 +42,43 @@ function formatContent(content: ThreadMessage["content"], isToolMessage = false)
 
 export function MessageList({ messages, isStreaming }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const [isUserScrolledUp, setIsUserScrolledUp] = useState(false);
+  const [wasStreaming, setWasStreaming] = useState(false);
+  const SCROLL_THRESHOLD = 100; // pixels from bottom
 
+  // Check if user is near the bottom of the scroll container
+  const isNearBottom = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return true;
+    const { scrollHeight, scrollTop, clientHeight } = container;
+    return scrollHeight - scrollTop - clientHeight < SCROLL_THRESHOLD;
+  }, []);
+
+  // Handle scroll events to detect manual scrolling
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isStreaming]);
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      setIsUserScrolledUp(!isNearBottom());
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [isNearBottom]);
+
+  // Auto-scroll logic: only scroll if user is near bottom or streaming just started
+  useEffect(() => {
+    const shouldAutoScroll = isNearBottom() || (isStreaming && !wasStreaming);
+    
+    if (shouldAutoScroll) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      setIsUserScrolledUp(false);
+    }
+
+    setWasStreaming(isStreaming ?? false);
+  }, [messages, isStreaming, isNearBottom, wasStreaming]);
 
   // Create a map of tool_call_id to tool call for linking responses
   const toolCallMap = new Map<string, { name: string; args: unknown }>();
@@ -63,7 +96,10 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
   });
 
   return (
-    <div className="flex-1 overflow-y-auto rounded-lg border border-neutral-200 bg-white/70 p-4 shadow-sm">
+    <div
+      ref={scrollContainerRef}
+      className="h-[60vh] overflow-y-auto rounded-lg border border-neutral-200 bg-white/70 p-4 shadow-sm"
+    >
       <div className="space-y-4">
         {messages.map((message) => (
           <div
