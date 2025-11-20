@@ -40,13 +40,15 @@ export async function POST(req: Request) {
   const agentId = process.env.RUNLOOP_DEFAULT_AGENT_ID;
   const defaultGithubToken = process.env.GITHUB_TOKEN;
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const tavilyKey = process.env.TAVILY_API_KEY;
+  const defaultSnapshotId = process.env.RUNLOOP_DEFAULT_SNAPSHOT_ID;
   const runCommand =
     process.env.RUNLOOP_DEFAULT_COMMAND ||
     "cd /home/user/agent && npm start";
 
-  if (!agentId) {
+  if (!agentId || !defaultSnapshotId) {
     return NextResponse.json(
-      { error: "RUNLOOP_DEFAULT_AGENT_ID is not set" },
+      { error: "Neither RUNLOOP_DEFAULT_AGENT_ID nor RUNLOOP_DEFAULT_SNAPSHOT_ID is set" },
       { status: 500 },
     );
   }
@@ -54,6 +56,13 @@ export async function POST(req: Request) {
   if (!anthropicKey) {
     return NextResponse.json(
       { error: "ANTHROPIC_API_KEY is not set" },
+      { status: 500 },
+    );
+  }
+
+  if (!tavilyKey) {
+    return NextResponse.json(
+      { error: "TAVILY_API_KEY is not set" },
       { status: 500 },
     );
   }
@@ -84,8 +93,8 @@ export async function POST(req: Request) {
           token: githubSecret || undefined,
         },
       ],
-      snapshot_id: process.env.RUNLOOP_DEFAULT_SNAPSHOT_ID || undefined,
-      mounts: !process.env.RUNLOOP_DEFAULT_SNAPSHOT_ID ? [
+      snapshot_id: defaultSnapshotId || undefined,
+      mounts: !defaultSnapshotId ? [
         {
           type: "agent_mount",
           agent_id: agentId,
@@ -95,6 +104,7 @@ export async function POST(req: Request) {
       ] : null,
       environment_variables:{
         ANTHROPIC_API_KEY: anthropicKey,
+        TAVILY_API_KEY: tavilyKey,
         ...(githubSecret ? { GH_TOKEN: githubSecret } : {}),
       },
       launch_parameters: {
