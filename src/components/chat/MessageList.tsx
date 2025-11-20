@@ -8,8 +8,20 @@ interface MessageListProps {
   isStreaming?: boolean;
 }
 
-function formatContent(content: ThreadMessage["content"]): string {
-  if (typeof content === "string") return content;
+function formatContent(content: ThreadMessage["content"], isToolMessage = false): string {
+  if (typeof content === "string") {
+    // For tool messages, try to parse and pretty-print JSON
+    if (isToolMessage) {
+      try {
+        const parsed = JSON.parse(content);
+        return JSON.stringify(parsed, null, 2);
+      } catch {
+        // Not JSON, return as-is
+        return content;
+      }
+    }
+    return content;
+  }
   if (Array.isArray(content)) {
     return content
       .map((block) => {
@@ -17,7 +29,7 @@ function formatContent(content: ThreadMessage["content"]): string {
         if (block && typeof block === "object" && "text" in block) {
           return String(block.text ?? "");
         }
-        return JSON.stringify(block);
+        return JSON.stringify(block, null, 2);
       })
       .filter(Boolean)
       .join("\n\n");
@@ -25,7 +37,7 @@ function formatContent(content: ThreadMessage["content"]): string {
   if (content && typeof content === "object" && "text" in content) {
     return String((content as { text?: unknown }).text ?? "");
   }
-  return JSON.stringify(content);
+  return JSON.stringify(content, null, 2);
 }
 
 export function MessageList({ messages, isStreaming }: MessageListProps) {
@@ -34,6 +46,21 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isStreaming]);
+
+  // Create a map of tool_call_id to tool call for linking responses
+  const toolCallMap = new Map<string, { name: string; args: unknown }>();
+  messages.forEach((message) => {
+    if (message.type === "ai" && message.tool_calls) {
+      message.tool_calls.forEach((call) => {
+        if (call.id) {
+          toolCallMap.set(call.id, {
+            name: call.name,
+            args: "args" in call ? call.args : {},
+          });
+        }
+      });
+    }
+  });
 
   return (
     <div className="flex-1 overflow-y-auto rounded-lg border border-neutral-200 bg-white/70 p-4 shadow-sm">
@@ -56,7 +83,7 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
                 {message.type}
               </div>
               <div className="whitespace-pre-wrap">
-                {formatContent(message.content)}
+                {formatContent(message.content, message.type === "tool")}
               </div>
               {message.type === "ai" && message.tool_calls?.length ? (
                 <div className="mt-2 space-y-1 rounded-md bg-white/60 p-2 text-xs text-neutral-700">
@@ -82,10 +109,63 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
                 ))}
               </div>
               ) : null}
-              {message.type === "tool" && message.name ? (
-                <p className="mt-1 text-xs text-neutral-500">
-                  Responding to: {message.name}
-                </p>
+              {message.type === "tool" ? (
+                <div className="mt-2 space-y-1">
+                  {(() => {
+                    const linkedToolCall = message.tool_call_id
+                      ? toolCallMap.get(message.tool_call_id)
+                      : null;
+                    const toolName = message.name || linkedToolCall?.name;
+
+                    return (
+                      <>
+                        {toolName && (
+                          <p className="text-xs font-semibold text-neutral-600">
+                            Tool: {toolName}
+                          </p>
+                        )}
+                        {message.tool_call_id && (
+                          <p className="text-[10px] text-neutral-400 font-mono">
+                            Call ID: {message.tool_call_id.substring(0, 12)}...
+                          </p>
+                        )}
+                        {message.status && (
+                          <span
+                            className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                              message.status === "success"
+                                ? "bg-emerald-100 text-emerald-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {message.status}
+                          </span>
+                        )}
+                        {linkedToolCall && (
+                          <details className="mt-2">
+                            <summary className="cursor-pointer text-xs text-neutral-600">
+                              View tool call arguments
+                            </summary>
+                            <pre className="mt-1 whitespace-pre-wrap text-[11px] text-neutral-600">
+                              {JSON.stringify(linkedToolCall.args, null, 2)}
+                            </pre>
+                          </details>
+                        )}
+                        {message.artifact && (
+                          <details className="mt-2">
+                            <summary className="cursor-pointer text-xs text-neutral-600">
+                              View artifact
+                            </summary>
+                            <pre className="mt-1 whitespace-pre-wrap text-[11px] text-neutral-600">
+                              {typeof message.artifact === "string"
+                                ? message.artifact
+                                : JSON.stringify(message.artifact, null, 2)}
+                            </pre>
+                          </details>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
               ) : null}
               {isStreaming &&
               messages[messages.length - 1]?.id === message.id ? (
