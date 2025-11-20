@@ -1,28 +1,27 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { ChatInterface } from "@/components/chat/ChatInterface";
 import { SessionStatus } from "@/components/SessionStatus";
 import type { Session } from "@/types/session";
 
-interface ChatPageProps {
-  params: { sessionId: string };
-}
-
-export default function ChatPage({ params }: ChatPageProps) {
+export default function ChatPage() {
   const router = useRouter();
+  const params = useParams<{ sessionId?: string }>();
+  const sessionId = useMemo(() => params?.sessionId ?? "", [params]);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isShuttingDown, setIsShuttingDown] = useState(false);
 
   const fetchSession = useCallback(async () => {
+    if (!sessionId) return;
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/runloop/session/${params.sessionId}`);
+      const response = await fetch(`/api/runloop/session/${sessionId}`);
       if (!response.ok) {
         throw new Error("Session not found");
       }
@@ -34,7 +33,7 @@ export default function ChatPage({ params }: ChatPageProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [params.sessionId]);
+  }, [sessionId]);
 
   const shutdownSession = useCallback(async () => {
     if (!session) return;
@@ -78,6 +77,16 @@ export default function ChatPage({ params }: ChatPageProps) {
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [session]);
+
+  if (!sessionId) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-neutral-50 p-6">
+        <div className="rounded-xl border border-neutral-200 bg-white px-6 py-4 text-sm text-neutral-700 shadow-sm">
+          Missing session id.
+        </div>
+      </main>
+    );
+  }
 
   if (isLoading && !session) {
     return (

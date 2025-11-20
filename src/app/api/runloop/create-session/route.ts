@@ -82,7 +82,6 @@ export async function POST(req: Request) {
           repo_name: repoName,
           repo_owner: repoOwner,
           token: githubSecret || undefined,
-          install_command: "npm install",
         },
       ],
       mounts: [
@@ -93,13 +92,16 @@ export async function POST(req: Request) {
           agent_path: "/home/user/agent",
         },
       ],
-      secrets: {
+      environment_variables:{
         ANTHROPIC_API_KEY: anthropicKey,
         ...(githubSecret ? { GH_TOKEN: githubSecret } : {}),
       },
       launch_parameters: {
         available_ports: [port],
       },
+      metadata: {
+        from: "runloopAgentTemplate"
+      }
     });
 
     const devboxId = devbox.id;
